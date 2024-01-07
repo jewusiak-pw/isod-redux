@@ -11,7 +11,7 @@ export default function IsodView() {
 
     const orgRef = useRef(null);
     const ownerRef = useRef(null);
-    
+
 
     const onLoadDataClick = () => {
         dispatch(async (dispatch, getState) => {
@@ -33,7 +33,7 @@ export default function IsodView() {
         dispatch(
             async (dispatch, getState) => {
                 dispatch(reducerSlice.actions.setLoading(true));
-                if (getState().downloadDate < Date.now() - 1000*3) {
+                if (getState().downloadDate < Date.now() - 1000 * 3) {
                     let {resp, date} = await loadDataAsync();
                     dispatch(reducerSlice.actions.setData({resp, date}))
                 }
@@ -62,12 +62,14 @@ export default function IsodView() {
                 <td>Temat</td>
             </tr>
             </thead>
+            <tbody>
             {viewData.map((el, idx) => <tr key={"iv-tr-" + idx}>
                 <td>{el.id}</td>
                 <td>{el.unit}</td>
                 <td>{el.owner}</td>
                 <td>{el.title}</td>
             </tr>)}
+            </tbody>
         </table>
     </div>
 }
