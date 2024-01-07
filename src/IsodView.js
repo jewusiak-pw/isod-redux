@@ -1,56 +1,56 @@
 import {useRef} from "react";
 import {useDispatch, useSelector} from "react-redux";
-import loadData from "./ApiService";
+import {loadDataAsync} from "./ApiService";
 import {reducerSlice} from "./reducer";
 
 export default function IsodView() {
-    
+
     const dispatch = useDispatch();
-    const isLoading = useSelector((state) => state?.isLoading?? false);
+    const isLoading = useSelector((state) => state?.isLoading ?? false);
     const viewData = useSelector((state) => state?.viewData);
 
     const orgRef = useRef(null);
     const ownerRef = useRef(null);
     
+
     const onLoadDataClick = () => {
+        dispatch(async (dispatch, getState) => {
+            dispatch(reducerSlice.actions.setLoading(true));
+            const {resp, date} = await loadDataAsync();
+            dispatch(reducerSlice.actions.setData({resp, date}))
+            dispatch(reducerSlice.actions.setLoading(false));
+        });
+    }
+
+    if (viewData == null) {
+        return <div><h1>No data.</h1>
+            <button onClick={onLoadDataClick} disabled={isLoading}>Load Data?</button>
+        </div>;
+
+    }
+
+    const onApplyFilterClick = () => {
         dispatch(
-            function (dispatch) {
+            async (dispatch, getState) => {
                 dispatch(reducerSlice.actions.setLoading(true));
-                loadData(({resp, date})=> {
+                if (getState().downloadDate < Date.now() - 1000*3) {
+                    let {resp, date} = await loadDataAsync();
                     dispatch(reducerSlice.actions.setData({resp, date}))
-                    dispatch(reducerSlice.actions.setLoading(false));
-                })
-            }
-        )
-    }
-    
-    if (viewData == null ){
-        return <div><h1>No data.</h1><button onClick={onLoadDataClick} disabled={isLoading}>Load Data?</button> </div>;
-    }
-    
-    const applyFilterCallback = () => {
-        dispatch(
-            function (dispatch, getState) {
-                dispatch(reducerSlice.actions.setLoading(true));
-                if (getState().downloadDate < Date.now() - 1000) {
-                    loadData(({resp, date}) => {
-                        dispatch(reducerSlice.actions.setData({resp, date}))
-                        dispatch(reducerSlice.actions.applyFilters({org:orgRef.current.value, owner: ownerRef.current.value}))
-                        dispatch(reducerSlice.actions.setLoading(false));
-                    })
                 }
+                dispatch(reducerSlice.actions.applyFilters({org: orgRef.current.value, owner: ownerRef.current.value}))
+                dispatch(reducerSlice.actions.setLoading(false));
             }
         )
     };
-    
-    
+
+
     return <div>
         <div style={{display: "flex", flexDirection: "row"}}>
             <input type="text" placeholder="Organizacja" ref={orgRef} disabled={isLoading}/>
             <div style={{width: "30px"}}></div>
             <input type="text" placeholder="Prowadzący" ref={ownerRef} disabled={isLoading}/>
             <div style={{width: "30px"}}></div>
-            <button onClick={applyFilterCallback} disabled={isLoading}>Zastosuj filtry</button>
+            <button onClick={onApplyFilterClick} disabled={isLoading}>Zastosuj filtry</button>
         </div>
         <br/>
         <table className="isod-table">
