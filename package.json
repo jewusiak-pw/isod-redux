@@ -1,5 +1,5 @@
 {
-  "name": "isod-context",
+  "name": "isod-redux",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
