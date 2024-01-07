@@ -1,17 +1,17 @@
 import './App.css';
-import React, {useContext} from "react";
+import React from "react";
 import IsodView from "./IsodView";
-import {IsodContext} from "./ContextService";
 import {InfinitySpin} from "react-loader-spinner";
+import {useSelector} from "react-redux";
 
 
 function App() {
-    const cxt = useContext(IsodContext);
+    const isLoading = useSelector((state)=>state?.isLoading??false);
 
     return (
         <div style={{height: "50px"}}>
             <div style={{height: "50px"}}>
-                {cxt?.state?.isLoading ?? false ? <InfinitySpin width={100}/> : ""}
+                {isLoading  ? <InfinitySpin width={100}/> : ""}
             </div>
             <IsodView/>
         </div>

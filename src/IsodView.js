@@ -1,18 +1,47 @@
-import {useContext, useRef} from "react";
-import {IsodContext} from "./ContextService";
+import {useRef} from "react";
+import {useDispatch, useSelector} from "react-redux";
+import loadData from "./ApiService";
+import {reducerSlice} from "./reducer";
 
 export default function IsodView() {
     
-    const {state: {viewData, isLoading}, loadData, applyFilter} = useContext(IsodContext);
+    const dispatch = useDispatch();
+    const isLoading = useSelector((state) => state?.isLoading?? false);
+    const viewData = useSelector((state) => state?.viewData);
 
     const orgRef = useRef(null);
     const ownerRef = useRef(null);
     
-    if (viewData == null ){
-        return <div><h1>No data.</h1><button onClick={loadData} disabled={isLoading}>Load Data?</button> </div>;
+    const onLoadDataClick = () => {
+        dispatch(
+            function (dispatch) {
+                dispatch(reducerSlice.actions.setLoading(true));
+                loadData(({resp, date})=> {
+                    dispatch(reducerSlice.actions.setData({resp, date}))
+                    dispatch(reducerSlice.actions.setLoading(false));
+                })
+            }
+        )
     }
     
-    const applyFilterCallback = () =>applyFilter(orgRef.current.value, ownerRef.current.value);
+    if (viewData == null ){
+        return <div><h1>No data.</h1><button onClick={onLoadDataClick} disabled={isLoading}>Load Data?</button> </div>;
+    }
+    
+    const applyFilterCallback = () => {
+        dispatch(
+            function (dispatch, getState) {
+                dispatch(reducerSlice.actions.setLoading(true));
+                if (getState().downloadDate < Date.now() - 1000) {
+                    loadData(({resp, date}) => {
+                        dispatch(reducerSlice.actions.setData({resp, date}))
+                        dispatch(reducerSlice.actions.applyFilters({org:orgRef.current.value, owner: ownerRef.current.value}))
+                        dispatch(reducerSlice.actions.setLoading(false));
+                    })
+                }
+            }
+        )
+    };
     
     
     return <div>
@@ -21,7 +50,7 @@ export default function IsodView() {
             <div style={{width: "30px"}}></div>
             <input type="text" placeholder="Prowadzący" ref={ownerRef} disabled={isLoading}/>
             <div style={{width: "30px"}}></div>
-            <button onClick={applyFilterCallback} disabled={isLoading}>Zastosuj filtry</button>    
+            <button onClick={applyFilterCallback} disabled={isLoading}>Zastosuj filtry</button>
         </div>
         <br/>
         <table className="isod-table">
